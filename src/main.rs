@@ -1,5 +1,6 @@
 use std::env;
 use std::process;
+use std::process::{Command, Stdio};
 
 struct Config {
     input_video: String,
@@ -37,6 +38,17 @@ impl Config {
     }
 }
 
+pub fn combine_movie(command: String) {
+    let mut combine = Command::new("/bin/sh")
+        .args(&["-c", command])
+        .stdin(Stdio::piped())
+        .spawn()
+        .expect("failed to execute combine");
+    {
+        let stdin = combine.stdin.as_mut().expect("filed to get stdin");
+    }
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let config = Config::new(&args).unwrap_or_else(|err| {
@@ -45,5 +57,7 @@ fn main() {
     });
 
     let command = config.format_command();
-    println!("{}", command)
+    println!("{}", command);
+
+    combine_movie(command)
 }
