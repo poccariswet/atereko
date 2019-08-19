@@ -40,7 +40,7 @@ impl Config {
 
 pub fn combine_movie(command: String) {
     let mut combine = Command::new("/bin/sh")
-        .args(&["-c", command])
+        .args(&["-c", &command])
         .stdin(Stdio::piped())
         .spawn()
         .expect("failed to execute combine");
