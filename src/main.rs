@@ -29,7 +29,7 @@ impl Config {
     }
 
     pub fn format_command(&self) -> String {
-        format!("ffmpeg -i {input_v} -itsoffset {input_t} -i {input_m} -c copy -map 0:v:0 -map 1:a:0 {output}",
+        format!("ffmpeg -i {input_v} -itsoffset {input_t} -i {input_m} -c copy -map 0:v:0 -map 1:a:0 {output}.mp4",
                 input_v = self.input_video,
                 input_t = self.input_time,
                 input_m = self.input_music,
