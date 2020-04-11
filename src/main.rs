@@ -2,56 +2,65 @@ use std::env;
 use std::process;
 use std::process::{Command, Stdio};
 
-struct Config {
+struct Flag {
     input_video: String,
-    input_music: String,
+    input_audio: String,
     input_time: String,
     output: String,
 }
 
-impl Config {
-    pub fn new(args: &[String]) -> Result<Config, &'static str> {
+impl Flag {
+    pub fn new(args: &[String]) -> Result<Flag, &'static str> {
         if args.len() < 5 {
             return Err("not enough arguments");
         }
 
         let input_video = args[1].clone();
-        let input_music = args[2].clone();
+        let input_audio = args[2].clone();
         let input_time = args[3].clone();
         let output = args[4].clone();
 
-        Ok(Config {
+        Ok(Flag {
             input_video,
-            input_music,
+            input_audio,
             input_time,
             output,
         })
     }
 
     pub fn format_command(&self) -> String {
-        format!("ffmpeg -i {input_v} -itsoffset {input_t} -i {input_m} -c copy -map 0:v:0 -map 1:a:0 {output}.mp4",
+        format!("ffmpeg -i {input_v} -itsoffset {input_t} -i {input_a} -c:v copy -map 0:v:0 -map 1:a:0 {output}.mp4",
                 input_v = self.input_video,
-                input_t = self.input_time,
-                input_m = self.input_music,
+                input_t = format_hhmmss(self.input_time.parse::<usize>().unwrap()),
+                input_a = self.input_audio,
                 output = self.output
                 )
     }
 }
 
-pub fn combine_movie(command: String) {
+fn format_hhmmss(target_seconds: usize) -> String {
+    let target_minutes = target_seconds / 60;
+    let seconds = target_seconds % 60;
+    let hour = target_minutes / 60;
+    let minutes = target_minutes % 60;
+
+    return format!("{:02}:{:02}:{:02}", hour, minutes, seconds);
+}
+
+pub fn exec_cmd(command: String) {
     let mut combine = Command::new("/bin/sh")
         .args(&["-c", &command])
         .stdin(Stdio::piped())
         .spawn()
         .expect("failed to execute combine");
     {
-        let stdin = combine.stdin.as_mut().expect("filed to get stdin");
+        let _stdin = combine.stdin.as_mut().expect("filed to get stdin");
     }
 }
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let config = Config::new(&args).unwrap_or_else(|err| {
+    let config = Flag::new(&args).unwrap_or_else(|err| {
         eprintln!("Problem parsing arguments: {}", err);
         process::exit(1);
     });
@@ -59,5 +68,5 @@ fn main() {
     let command = config.format_command();
     println!("{}", command);
 
-    combine_movie(command)
+    exec_cmd(command)
 }
